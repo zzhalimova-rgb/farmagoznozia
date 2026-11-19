@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фармакогнозия: ИИ-тренажёр по лекарственному растительному сырью</title>
+<style>
+:root{--g:#2f6b4f;--g2:#e8f2ec;--ink:#1e2a24;--mut:#5d6b64;--line:#d5e0da;--bg:#f7faf8;--ok:#2e7d32;--bad:#c62828}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+header{background:var(--g);color:#fff;padding:18px 16px 14px}
+header h1{margin:0;font-size:20px}
+header p{margin:4px 0 0;font-size:13px;opacity:.9}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:20px;padding:8px 14px;font-size:14px;cursor:pointer;color:var(--ink)}
+nav button.on{background:var(--g);color:#fff;border-color:var(--g)}
+main{max-width:900px;margin:0 auto;padding:16px}
+.sec{display:none}.sec.on{display:block}
+h2{font-size:18px;margin:6px 0 12px;color:var(--g)}
+.muted{color:var(--mut);font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select{font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;flex:1;min-width:150px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;min-height:150px;transition:.15s}
+.card:hover{box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.card h3{margin:0;font-size:16px}.card .lat{font-style:italic;color:var(--mut);font-size:13px}
+.tag{display:inline-block;background:var(--g2);color:var(--g);border-radius:10px;padding:2px 8px;font-size:12px;margin:6px 4px 0 0}
+.card dl{margin:8px 0 0;font-size:14px}.card dt{font-weight:600;margin-top:4px}.card dd{margin:0}
+.hint{font-size:12px;color:var(--mut);margin-top:8px}
+.box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 12px;margin:6px 0;font-size:15px;cursor:pointer;color:var(--ink)}
+.opt.ok{border-color:var(--ok);background:#e8f5e9}.opt.bad{border-color:var(--bad);background:#ffebee}
+.btn{background:var(--g);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}
+.btn.sec2{background:#fff;color:var(--g);border:1px solid var(--g)}
+.expl{margin-top:10px;font-size:14px;background:var(--g2);border-radius:8px;padding:10px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 12px}.bar i{display:block;height:100%;background:var(--g)}
+.ai{font-size:12px;color:#7a5c00;background:#fff6d6;border-radius:6px;padding:2px 6px}
+.ans{display:none;margin-top:10px;background:var(--g2);border-radius:8px;padding:12px;font-size:14px}
+.ans.on{display:block}
+textarea{width:100%;min-height:80px;font-size:15px;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:inherit}
+footer{text-align:center;color:var(--mut);font-size:12px;padding:20px}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--g2)}
+</style>
+</head>
+<body>
+<header>
+<h1>🌿 Фармакогнозия: ИИ-тренажёр</h1>
+<p>Лекарственное растительное сырьё · специальность «Фармация»</p>
+</header>
+<nav id="nav">
+<button data-s="cards" class="on">Карточки ЛРС</button>
+<button data-s="test">Тест</button>
+<button data-s="match">Узнай растение</button>
+<button data-s="cases">Ситуационные задачи</button>
+<button data-s="about">О проекте</button>
+</nav>
+<main>
+
+<section id="cards" class="sec on">
+<h2>Карточки лекарственного растительного сырья</h2>
+<p class="muted">Нажмите на карточку, чтобы увидеть сырьё, действующие вещества и применение. Сначала попробуйте вспомнить сами.</p>
+<div class="row">
+<input id="q" placeholder="Поиск: растение, латынь, вещество…">
+<select id="grp"></select>
+</div>
+<div class="grid" id="grid"></div>
+</section>
+
+<section id="test" class="sec">
+<h2>Тест для самоконтроля</h2>
+<p class="muted">10 случайных вопросов из банка. После каждого ответа — пояснение.</p>
+<div id="testbox"></div>
+</section>
+
+<section id="match" class="sec">
+<h2>Узнай растение по описанию</h2>
+<p class="muted">Тренажёр показывает признаки сырья — назовите растение. Регистр и буква «ё» не важны.</p>
+<div class="box">
+<div id="mclue"></div>
+<div class="row" style="margin-top:12px"><input id="mans" placeholder="Название растения"><button class="btn" id="mchk">Проверить</button></div>
+<div id="mres"></div>
+<button class="btn sec2" id="mnext" style="margin-top:8px">Следующее растение</button>
+<p class="muted" id="mscore" style="margin-top:8px"></p>
+</div>
+</section>
+
+<section id="cases" class="sec">
+<h2>Ситуационные задачи</h2>
+<p class="muted">Запишите свой ответ, затем откройте эталон и сравните.</p>
+<div id="casebox"></div>
+</section>
+
+<section id="about" class="sec">
+<h2>О проекте</h2>
+<div class="box">
+<p><b>Цель:</b> дать студентам специальности «Фармация» (6В10104) инструмент для самостоятельного повторения раздела «Лекарственное растительное сырьё» дисциплины «Фармакогнозия» — без установки, без регистрации, с телефона.</p>
+<p><b>Что внутри:</b> 12 карточек ЛРС с поиском и фильтром по группам БАВ; банк тестовых вопросов с пояснениями; игра «Узнай растение»; 3 ситуационные задачи с эталонами ответов.</p>
+<p><b>Роль ИИ:</b> приложение спроектировано и написано с помощью ИИ-ассистента Claude (Anthropic): ИИ сгенерировал структуру, программный код, черновики карточек, тестовых вопросов и ситуационных задач. Преподаватель задал тематику и требования, проверил содержание на соответствие лекционному материалу и Государственной фармакопее РК.</p>
+<table>
+<tr><th>Вход</th><td>Действия студента: поиск, выбор ответа, ввод названия растения, собственный ответ на задачу</td></tr>
+<tr><th>Выход</th><td>Карточка с информацией, оценка ответа с пояснением, итоговый балл, эталон решения</td></tr>
+<tr><th>Данные</th><td>12 видов ЛРС, банк тестовых вопросов, 3 ситуационные задачи (лекционный комплекс кафедры)</td></tr>
+</table>
+<p class="muted" style="margin-top:10px">Автор: Жалимова З.О., докторант факультета «Фармация» Казахстанско-Российского медицинского университета (КРМУ), г. Алматы</p>
+</div>
+</section>
+</main>
+<footer>Учебный прототип · создан с использованием ИИ · 2026</footer>
+
+<script>
+const P=[
+{n:"Тысячелистник обыкновенный",l:"Achillea millefolium L.",f:"Asteraceae (Астровые)",r:"Трава (Millefolii herba)",g:"Эфирные масла",b:"Эфирное масло с хамазуленом, сесквитерпеновые лактоны (ахиллин), флавоноиды, дубильные вещества, витамин K",u:"Кровоостанавливающее, противовоспалительное, ранозаживляющее, улучшает аппетит и пищеварение"},
+{n:"Ромашка аптечная",l:"Matricaria chamomilla L.",f:"Asteraceae (Астровые)",r:"Цветки (Chamomillae flores)",g:"Эфирные масла",b:"Эфирное масло (хамазулен, бисаболол), флавоноиды (апигенин), кумарины",u:"Противовоспалительное, спазмолитическое, антисептическое, ветрогонное"},
+{n:"Шалфей лекарственный",l:"Salvia officinalis L.",f:"Lamiaceae (Яснотковые)",r:"Листья (Salviae officinalis folia)",g:"Эфирные масла",b:"Эфирное масло (цинеол, туйон), дубильные вещества, флавоноиды",u:"Противовоспалительное, вяжущее, антисептическое — полоскания при воспалении полости рта и горла"},
+{n:"Мята перечная",l:"Mentha × piperita L.",f:"Lamiaceae (Яснотковые)",r:"Листья (Menthae piperitae folia)",g:"Эфирные масла",b:"Эфирное масло (ментол, ментон), флавоноиды",u:"Спазмолитическое, желчегонное, противорвотное, местноотвлекающее"},
+{n:"Календула лекарственная",l:"Calendula officinalis L.",f:"Asteraceae (Астровые)",r:"Цветки (Calendulae flores)",g:"Каротиноиды и флавоноиды",b:"Каротиноиды, флавоноиды, тритерпеновые сапонины, эфирное масло",u:"Ранозаживляющее, противовоспалительное, антисептическое"},
+{n:"Зверобой продырявленный",l:"Hypericum perforatum L.",f:"Hypericaceae (Зверобойные)",r:"Трава (Hyperici herba)",g:"Антраценпроизводные",b:"Конденсированные антраценпроизводные (гиперицин), гиперфорин, флавоноиды, дубильные вещества",u:"Вяжущее, антисептическое, антидепрессивное; вызывает фотосенсибилизацию"},
+{n:"Валериана лекарственная",l:"Valeriana officinalis L.",f:"Caprifoliaceae (Жимолостные)",r:"Корневища с корнями (Valerianae rhizomata cum radicibus)",g:"Эфирные масла",b:"Эфирное масло (борнилизовалерианат), валепотриаты, алкалоиды",u:"Седативное, спазмолитическое"},
+{n:"Подорожник большой",l:"Plantago major L.",f:"Plantaginaceae (Подорожниковые)",r:"Листья (Plantaginis majoris folia)",g:"Полисахариды",b:"Полисахариды (слизь), иридоиды (аукубин), флавоноиды, витамин K",u:"Отхаркивающее, ранозаживляющее, противовоспалительное"},
+{n:"Алтей лекарственный",l:"Althaea officinalis L.",f:"Malvaceae (Мальвовые)",r:"Корни (Althaeae radices)",g:"Полисахариды",b:"Слизь (полисахариды) до 35%, крахмал, пектин",u:"Отхаркивающее, обволакивающее, противовоспалительное"},
+{n:"Крапива двудомная",l:"Urtica dioica L.",f:"Urticaceae (Крапивные)",r:"Листья (Urticae folia)",g:"Витамины",b:"Витамин K, аскорбиновая кислота, каротиноиды, хлорофилл",u:"Кровоостанавливающее, поливитаминное"},
+{n:"Солодка голая",l:"Glycyrrhiza glabra L.",f:"Fabaceae (Бобовые)",r:"Корни (Glycyrrhizae radices)",g:"Сапонины",b:"Тритерпеновые сапонины (глицирризиновая кислота), флавоноиды (ликвиритин)",u:"Отхаркивающее, противовоспалительное, противоязвенное"},
+{n:"Наперстянка пурпуровая",l:"Digitalis purpurea L.",f:"Plantaginaceae (Подорожниковые)",r:"Листья (Digitalis purpureae folia)",g:"Сердечные гликозиды",b:"Сердечные гликозиды (пурпуреагликозиды, дигитоксин), сапонины",u:"Кардиотоническое при сердечной недостаточности; ядовито, только по назначению врача"}
+];
+const $=s=>document.querySelector(s);
+const norm=s=>s.toLowerCase().replace(/ё/g,"е").trim();
+
+// nav
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("on",x===b));
+ document.querySelectorAll(".sec").forEach(s=>s.classList.toggle("on",s.id===b.dataset.s));
+ window.scrollTo(0,0);
+});
+
+// cards
+const groups=["Все группы БАВ",...new Set(P.map(p=>p.g))];
+$("#grp").innerHTML=groups.map(g=>`<option>${g}</option>`).join("");
+function drawCards(){
+ const q=norm($("#q").value),g=$("#grp").value;
+ const list=P.filter(p=>(g===groups[0]||p.g===g)&&norm(p.n+p.l+p.b+p.u+p.r).includes(q));
+ $("#grid").innerHTML=list.length?list.map((p,i)=>`<div class="card" data-i="${P.indexOf(p)}"><h3>${p.n}</h3><div class="lat">${p.l}</div><span class="tag">${p.f}</span><span class="tag">${p.g}</span><div class="back" hidden><dl><dt>Сырьё</dt><dd>${p.r}</dd><dt>Основные БАВ</dt><dd>${p.b}</dd><dt>Применение</dt><dd>${p.u}</dd></dl></div><div class="hint">Нажмите, чтобы открыть ▾</div></div>`).join(""):'<p class="muted">Ничего не найдено.</p>';
+ document.querySelectorAll(".card").forEach(c=>c.onclick=()=>{const b=c.querySelector(".back");b.hidden=!b.hidden;c.querySelector(".hint").textContent=b.hidden?"Нажмите, чтобы открыть ▾":"Нажмите, чтобы скрыть ▴";});
+}
+$("#q").oninput=drawCards;$("#grp").onchange=drawCards;drawCards();
+
+// test
+const Q=[
+["Хамазулен, придающий синий цвет эфирному маслу, содержится в сырье:",["Тысячелистника и ромашки","Мяты и шалфея","Валерианы","Солодки"],0,"Хамазулен образуется из прохамазуленов при перегонке эфирного масла тысячелистника и ромашки аптечной."],
+["Сырьём тысячелистника обыкновенного является:",["Трава","Корни","Цветки","Плоды"],0,"По фармакопее заготавливают траву тысячелистника (Millefolii herba)."],
+["Кровоостанавливающее действие тысячелистника и крапивы связано прежде всего с:",["Витамином K","Ментолом","Глицирризином","Слизью"],0,"Витамин K участвует в синтезе факторов свёртывания крови."],
+["Ментол — основной компонент эфирного масла:",["Мяты перечной","Шалфея","Ромашки","Календулы"],0,"Эфирное масло мяты перечной содержит до 50–70% ментола."],
+["Фотосенсибилизацию может вызывать сырьё:",["Зверобоя продырявленного","Алтея","Подорожника","Крапивы"],0,"Гиперицин зверобоя повышает чувствительность кожи к ультрафиолету."],
+["Глицирризиновая кислота относится к классу:",["Тритерпеновых сапонинов","Сердечных гликозидов","Алкалоидов","Кумаринов"],0,"Глицирризин корней солодки — тритерпеновый сапонин, в 50 раз слаще сахара."],
+["Основная группа БАВ корней алтея:",["Полисахариды (слизь)","Эфирные масла","Антраценпроизводные","Сердечные гликозиды"],0,"Слизь алтея обеспечивает обволакивающее и отхаркивающее действие."],
+["Сердечные гликозиды содержатся в листьях:",["Наперстянки","Подорожника","Шалфея","Крапивы"],0,"Наперстянка пурпуровая — источник гликозидов группы дигитоксина."],
+["Сырьё валерианы лекарственной:",["Корневища с корнями","Трава","Листья","Цветки"],0,"Заготавливают корневища с корнями осенью."],
+["Тысячелистник обыкновенный относится к семейству:",["Астровые (Asteraceae)","Яснотковые (Lamiaceae)","Бобовые (Fabaceae)","Мальвовые (Malvaceae)"],0,"Как ромашка и календула, тысячелистник — представитель Астровых."],
+["Каротиноиды — характерная группа БАВ цветков:",["Календулы","Ромашки","Мяты","Зверобоя"],0,"Оранжевая окраска цветков календулы обусловлена каротиноидами."],
+["Туйон и цинеол входят в состав эфирного масла:",["Шалфея лекарственного","Валерианы","Подорожника","Алтея"],0,"Эфирное масло шалфея содержит цинеол, туйон, камфору."],
+["Аукубин (иридоид) характерен для листьев:",["Подорожника большого","Мяты перечной","Солодки","Наперстянки"],0,"Аукубин — иридоидный гликозид подорожника."],
+["Для полоскания при воспалении полости рта благодаря вяжущему действию чаще применяют:",["Шалфей","Наперстянку","Валериану","Солодку"],0,"Дубильные вещества и эфирное масло шалфея дают вяжущий и антисептический эффект."],
+["Какое сырьё отпускают только по назначению врача из-за высокой токсичности?",["Листья наперстянки","Цветки ромашки","Листья мяты","Траву тысячелистника"],0,"Сердечные гликозиды имеют узкий терапевтический диапазон."],
+["Ранозаживляющие мази и кремы чаще всего создают на основе:",["Календулы и тысячелистника","Валерианы и мяты","Наперстянки","Солодки и алтея"],0,"Противовоспалительные и ранозаживляющие БАВ календулы и тысячелистника делают их удобной основой для мягких лекарственных форм."]
+];
+let tq=[],ti=0,ts=0;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startTest(){tq=shuffle(Q).slice(0,10).map(q=>{const o=q[1].map((t,k)=>({t,ok:k===q[2]}));return{q:q[0],o:shuffle(o),e:q[3]}});ti=0;ts=0;drawQ()}
+function drawQ(){
+ if(ti>=tq.length){const pct=Math.round(ts/tq.length*100);
+  $("#testbox").innerHTML=`<div class="box"><h3>Результат: ${ts} из ${tq.length} (${pct}%)</h3><p>${pct>=90?"Отлично! Материал усвоен.":pct>=70?"Хорошо. Повторите карточки по ошибкам.":"Рекомендуется ещё раз пройти карточки ЛРС."}</p><button class="btn" onclick="startTest()">Пройти заново</button></div>`;return}
+ const q=tq[ti];
+ $("#testbox").innerHTML=`<div class="box"><div class="muted">Вопрос ${ti+1} из ${tq.length} · верно: ${ts}</div><div class="bar"><i style="width:${ti/tq.length*100}%"></i></div><b>${q.q}</b>${q.o.map((o,k)=>`<button class="opt" data-k="${k}">${o.t}</button>`).join("")}<div id="ex"></div></div>`;
+ document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+  if(document.querySelector(".opt.ok"))return;
+  const o=q.o[b.dataset.k];if(o.ok)ts++;
+  document.querySelectorAll(".opt").forEach((x,k)=>{if(q.o[k].ok)x.classList.add("ok")});
+  if(!o.ok)b.classList.add("bad");
+  $("#ex").innerHTML=`<div class="expl">${o.ok?"✅ Верно. ":"❌ Неверно. "}${q.e}</div><button class="btn" style="margin-top:10px" id="nx">${ti+1<tq.length?"Далее":"Показать результат"}</button>`;
+  $("#nx").onclick=()=>{ti++;drawQ()};
+ });
+}
+startTest();
+
+// match
+let mi=0,mok=0,mtot=0,mdone=false,morder=shuffle(P.map((_,i)=>i));
+function drawM(){const p=P[morder[mi%P.length]];mdone=false;
+ $("#mclue").innerHTML=`<p><b>Семейство:</b> ${p.f}</p><p><b>Сырьё:</b> ${p.r.replace(/\(.*\)/,"")}</p><p><b>БАВ:</b> ${p.b}</p><p><b>Применение:</b> ${p.u}</p>`;
+ $("#mans").value="";$("#mres").innerHTML="";}
+$("#mchk").onclick=()=>{if(mdone)return;const p=P[morder[mi%P.length]];const a=norm($("#mans").value);if(!a)return;
+ const key=norm(p.n).split(" ")[0].slice(0,6);const ok=a.includes(key)||norm(p.l).includes(a)&&a.length>4;
+ mtot++;if(ok)mok++;mdone=true;
+ $("#mres").innerHTML=`<div class="expl">${ok?"✅ Верно":"❌ Правильный ответ"}: <b>${p.n}</b> (<i>${p.l}</i>)</div>`;
+ $("#mscore").textContent=`Угадано: ${mok} из ${mtot}`;};
+$("#mans").onkeydown=e=>{if(e.key==="Enter")$("#mchk").click()};
+$("#mnext").onclick=()=>{mi++;drawM()};drawM();
+
+// cases
+const C=[
+["В аптеку обратилась женщина с жалобами на небольшие порезы и ссадины, которые долго заживают. Она просит подобрать растительное средство для наружного применения.","1) Какое растительное сырьё можно предложить? 2) Какие БАВ обеспечивают эффект? 3) Какие лекарственные формы подходят?","1) Траву тысячелистника, цветки календулы, листья подорожника. 2) Тысячелистник — флавоноиды, дубильные вещества, хамазулен, витамин K (кровоостанавливающее, противовоспалительное); календула — каротиноиды, флавоноиды, тритерпеновые сапонины; подорожник — полисахариды, аукубин. 3) Настой для промываний и примочек, мазь или крем (например, с экстрактом тысячелистника или календулы), настойка календулы."],
+["При приёмке сырья «Трава тысячелистника» провизор обнаружил, что в партии много одревесневших стеблей толщиной более 3 мм и побуревших соцветий.","1) Какие показатели качества нарушены? 2) Как определить содержание эфирного масла? 3) Как поступить с партией?","1) Нарушены показатели «внешние признаки» и «посторонние примеси/недопустимые части сырья» по фармакопейной статье. 2) Методом перегонки с водяным паром (метод Гинзберга или Клевенджера) в аппарате для определения эфирного масла; результат в % в пересчёте на абсолютно сухое сырьё. 3) Отобрать пробы, провести полный анализ; при несоответствии требованиям ГФ РК партию забраковать и оформить акт."],
+["Пациент 65 лет, принимающий антикоагулянты, хочет пить чай из крапивы и тысячелистника «для укрепления сосудов».","1) Какой риск существует? 2) Какое вещество за него отвечает? 3) Что должен посоветовать фармацевт?","1) Снижение эффективности антикоагулянтной терапии и риск тромбообразования. 2) Витамин K, содержащийся в листьях крапивы и траве тысячелистника, — антагонист непрямых антикоагулянтов (варфарина). 3) Не принимать без консультации лечащего врача, предупредить о взаимодействии, при необходимости предложить альтернативу без витамина K."]
+];
+$("#casebox").innerHTML=C.map((c,i)=>`<div class="box"><b>Задача ${i+1}</b><p>${c[0]}</p><p><b>Вопросы:</b> ${c[1]}</p><textarea placeholder="Ваш ответ…"></textarea><button class="btn sec2" style="margin-top:8px" data-i="${i}">Показать эталон ответа</button><div class="ans" id="a${i}"><b>Эталон:</b> ${c[2]}</div></div>`).join("");
+document.querySelectorAll("#casebox button").forEach(b=>b.onclick=()=>{const a=$("#a"+b.dataset.i);a.classList.toggle("on");b.textContent=a.classList.contains("on")?"Скрыть эталон":"Показать эталон ответа";});
+</script>
+</body>
+</html>
